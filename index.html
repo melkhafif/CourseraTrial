@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake - Nokia Style</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="phone">
+    <div class="phone-top">
+      <span class="brand">NOKIA</span>
+    </div>
+    <div class="screen-frame">
+      <div class="screen">
+        <div class="status-bar">
+          <span>SNAKE</span>
+          <span id="score">Score: 0</span>
+        </div>
+        <canvas id="game" width="220" height="140"></canvas>
+        <div id="overlay" class="overlay">
+          <p id="overlay-text">Press START to play</p>
+        </div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="btn-up" class="dpad" aria-label="Up">&#9650;</button>
+      <div class="dpad-row">
+        <button id="btn-left" class="dpad" aria-label="Left">&#9664;</button>
+        <button id="btn-start" class="center-btn">START</button>
+        <button id="btn-right" class="dpad" aria-label="Right">&#9654;</button>
+      </div>
+      <button id="btn-down" class="dpad" aria-label="Down">&#9660;</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
