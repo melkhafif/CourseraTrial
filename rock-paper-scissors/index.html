@@ -172,41 +172,28 @@
     <div class="history" id="history" aria-label="Recent rounds"></div>
     <button type="button" class="link" id="reset">Wipe the board</button>
   </footer>
-  <p class="note">Chalky watches what you tend to throw after each move and tries to counter it — mix things up to stay ahead.</p>
+  <p class="note">Chalky picks every throw at random. It never sees your move or remembers past rounds.</p>
 </main>
 
 <script>
 (() => {
   const GLYPH = { rock: "✊", paper: "✋", scissors: "✌️" };
   const BEATS = { rock: "scissors", paper: "rock", scissors: "paper" };
-  const COUNTER = { rock: "paper", paper: "scissors", scissors: "rock" };
   const VERB = { rock: "crushes", paper: "covers", scissors: "cut" };
   const MOVES = ["rock", "paper", "scissors"];
   const cap = s => s[0].toUpperCase() + s.slice(1);
   const $ = id => document.getElementById(id);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let state = { you: 0, cpu: 0, draw: 0, target: 3, last: null, trans: {}, freq: { rock: 0, paper: 0, scissors: 0 }, history: [] };
+  let state = { you: 0, cpu: 0, draw: 0, target: 3, history: [] };
   try { const t = +localStorage.getItem("rps-target"); if ([0, 3, 5].includes(t)) state.target = t; } catch (e) {}
   let busy = false;
 
   function cpuMove() {
-    // Predict the player's next move from what they threw after their last move; counter it 70% of the time.
-    const table = state.last ? state.trans[state.last] : null;
-    const src = table && Object.values(table).some(Boolean) ? table : state.freq;
-    const total = MOVES.reduce((n, m) => n + (src[m] || 0), 0);
-    if (total === 0 || Math.random() < 0.3) return MOVES[Math.floor(Math.random() * 3)];
-    const guess = MOVES.reduce((a, b) => ((src[b] || 0) > (src[a] || 0) ? b : a));
-    return COUNTER[guess];
-  }
-
-  function learn(move) {
-    state.freq[move]++;
-    if (state.last) {
-      state.trans[state.last] ??= { rock: 0, paper: 0, scissors: 0 };
-      state.trans[state.last][move]++;
-    }
-    state.last = move;
+    // Pure random: Chalky never sees or remembers your moves.
+    const r = new Uint32Array(1);
+    crypto.getRandomValues(r);
+    return MOVES[r[0] % 3];
   }
 
   function tallySVG(n) {
@@ -248,10 +235,9 @@
 
   function play(move) {
     if (busy) return;
-    if (matchOver()) newMatch(false);
+    if (matchOver()) newMatch();
     busy = true;
     const cpu = cpuMove();
-    learn(move);
     const hy = $("handYou"), hc = $("handCpu");
     hy.textContent = hc.textContent = GLYPH.rock;
     hy.className = "hand you"; hc.className = "hand cpu";
@@ -302,10 +288,9 @@
     busy = false;
   }
 
-  function newMatch(full) {
+  function newMatch() {
     state.you = state.cpu = state.draw = 0;
     state.history = [];
-    if (full) { state.last = null; state.trans = {}; state.freq = { rock: 0, paper: 0, scissors: 0 }; }
     $("handYou").className = "hand you"; $("handCpu").className = "hand cpu";
     $("handYou").textContent = $("handCpu").textContent = GLYPH.rock;
     render();
@@ -315,12 +300,12 @@
   document.querySelectorAll(".mode button").forEach(b => b.addEventListener("click", () => {
     state.target = +b.dataset.target;
     try { localStorage.setItem("rps-target", String(state.target)); } catch (e) {}
-    newMatch(false);
+    newMatch();
     setVerdict("", state.target ? `New match: first to ${state.target}.` : "Endless mode.", "Press R, P or S — or tap below.");
   }));
   $("reset").addEventListener("click", () => {
-    newMatch(true);
-    setVerdict("", "Board wiped clean.", "Chalky forgot everything it learned about you.");
+    newMatch();
+    setVerdict("", "Board wiped clean.", "Score reset. Throw when ready.");
   });
   document.addEventListener("keydown", e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
